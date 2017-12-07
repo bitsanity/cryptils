@@ -9,8 +9,6 @@ public class Base58Check
     byte[] checksum =
       java.util.Arrays.copyOfRange( SHA256.hash(SHA256.hash(extkey)), 0, 4 );
 
-    System.out.println( "checksum: " + HexString.encode(checksum) );
-
     // append checksum to input
     byte[] toEncode = new byte[ extkey.length + checksum.length ];
 
@@ -21,8 +19,6 @@ public class Base58Check
                       toEncode,
                       toEncode.length - checksum.length,
                       checksum.length );
-
-    System.out.println( "appended: " + HexString.encode(toEncode) );
 
     return Base58.encode( toEncode );
   }
