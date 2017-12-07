@@ -10,9 +10,12 @@ public class Tests
     ByteOps.main( noargs );
     HexString.main( noargs );
     SHA256.main( noargs );
-    RIPEMD160.main( noargs );
+    //RIPEMD160.main( noargs );
+    Base58.main( noargs );
+    Base58Check.main( noargs );
     Base64.main( noargs );
     AES256.main( noargs );
+    BitcoinAddress.main( noargs );
     Secp256k1.main( noargs );
     ECIES.main( noargs );
     MessagePart.main( noargs );
