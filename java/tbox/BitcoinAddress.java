@@ -21,9 +21,7 @@ public class BitcoinAddress
       throw new Exception( "BitcoinAddress(): public key invalid" );
 
     byte[] hashed = SHA256.hash( pubkey );
-    System.out.println( "SHA256: " + HexString.encode(hashed) );
     byte[] riped = RIPEMD160.digest( hashed );
-    System.out.println( "RMD: " + HexString.encode(riped) );
 
     // prepend the 0x00 for MAIN bitcoin network
     byte[] riped2 = ByteOps.prepend( MAIN, riped );
