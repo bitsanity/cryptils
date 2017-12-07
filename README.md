@@ -1,8 +1,13 @@
 # cryptils
+
 Java Utilities for Crypto
 
-## Dependencies
+## Outside Dependencies
 
 * github.com/bitcoin-core/secp256k1
-* github.com/bitsanity/cryptils
 
+## Included Dependencies
+
+* scrypt-1.4.0
+* zxing-core-3.2.1
+* zxing-javase-3.2.1
