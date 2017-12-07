@@ -5,8 +5,6 @@ public class BitcoinAddress
 {
   public BitcoinAddress( byte[] pvkey ) throws Exception
   {
-    System.out.println( "key: " + HexString.encode(pvkey) );
-
     // WARNING:
     // curve must be configured to use the uncompressed public key format
     Secp256k1 curve = new Secp256k1();
