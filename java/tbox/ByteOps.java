@@ -66,6 +66,14 @@ public class ByteOps
     return concat( a, padarray );
   }
 
+  public static boolean compare( byte[] a, byte[] b ) throws Exception
+  {
+    for (int ii = 0; ii < a.length; ii++)
+      if (a[ii] != b[ii]) return false;
+
+    return true;
+  }
+
   public static void main( String[] args ) throws Exception
   {
     byte[] a   = new byte[] { (byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03 };
