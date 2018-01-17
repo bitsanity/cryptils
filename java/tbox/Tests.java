@@ -15,8 +15,9 @@ public class Tests
     Base58Check.main( noargs );
     Base64.main( noargs );
     AES256.main( noargs );
-    BitcoinAddress.main( noargs );
     Secp256k1.main( noargs );
+    WIF.main( noargs );
+    BitcoinAddress.main( noargs );
     ECIES.main( noargs );
     MessagePart.main( noargs );
     Message.main( noargs );

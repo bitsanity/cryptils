@@ -48,5 +48,7 @@ public class BitcoinAddress
 
     if ( !ba.toString().equals(pubAdd) )
       throw new Exception( "BitcoinAddress: " + ba.toString() );
+
+    System.out.println( "BitCoinAddress: PASS" );
   }
 }
