@@ -19,6 +19,7 @@ public class Tests
     Secp256k1.main( noargs );
     WIF.main( noargs );
     BitcoinAddress.main( noargs );
+    EthereumAddress.main( noargs );
     ECIES.main( noargs );
     MessagePart.main( noargs );
     Message.main( noargs );
