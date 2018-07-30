@@ -19,6 +19,10 @@ public class HexString
 
   public static byte[] decode( String hexString )
   {
+    // ignore leading "0x" if present
+    if (hexString.toUpperCase().startsWith("0X"))
+      hexString = hexString.substring(2);
+
     int len = hexString.length();
     byte[] data = new byte[len/2];
 

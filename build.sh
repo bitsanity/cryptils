@@ -15,6 +15,7 @@ then
   popd
 
   echo compiling Java ...
+  javac -g -classpath $JARS:./java:. java/tbox/keccak256/*.java
   javac -g -classpath $JARS:./java:. java/tbox/*.java
 
   echo making dist ...
@@ -30,6 +31,7 @@ if [ "$commd" = "clean" ]
 then
   echo cleaning...
   rm C/*.o C/tbox_*.h
+  rm java/tbox/keccak256/*.class
   rm java/tbox/*.class
   rm lib/tbox.jar
   rm lib/libtbox.so
