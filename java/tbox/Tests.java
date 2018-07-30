@@ -11,6 +11,7 @@ public class Tests
     HexString.main( noargs );
     SHA256.main( noargs );
     //RIPEMD160.main( noargs );
+    Keccak256.main( noargs );
     Base58.main( noargs );
     Base58Check.main( noargs );
     Base64.main( noargs );
