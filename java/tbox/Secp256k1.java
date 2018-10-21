@@ -101,5 +101,19 @@ public class Secp256k1
 
     if ( !crypto.verifyECDSA(sig, hash32, pubkey) )
       throw new Exception( "Secp256k1.main(): verify FAIL" );
+
+    // test recoverable signing and verifying
+    sig = crypto.signECDSARecoverable( hash32, seckey );
+
+    if ( !crypto.verifyECDSARecoverable(sig, hash32, pubkey) )
+      throw new Exception( "Secp256k1.main(): verify FAIL" );
+
+    byte[] recoveredpubkey = crypto.recoverPublicKey( hash32, sig );
+    String recoveredpubkeyS = HexString.encode( recoveredpubkey );
+
+    if (!pubkeyS.equalsIgnoreCase(recoveredpubkeyS))
+      throw new Exception( "Secp256k1.main(): recoverable sig verify FAIL" );
+
+    System.out.println( "Secp256k1: PASS" );
   }
 }
