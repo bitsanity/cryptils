@@ -29,7 +29,6 @@ public class ECIES
     byte[] R = ec.publickey();
 
     // Shared Secret S = Px where P = (Px, Py) = Qb . r
-
     byte[] P = curve.publicKeyMult( otherPubKey_, ec.privatekey() );
     P = ByteOps.dropFirstByte( P ); // minus the leading 0x04
 

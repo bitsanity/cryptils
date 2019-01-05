@@ -67,6 +67,16 @@ public class Secp256k1
   // recover public key from sig and hash of message
   public native byte[] recoverPublicKey( byte[] msghash32, byte[] sig );
 
+  // make recoverable signature of message hash using seckey
+  public native byte[] signSchnorr( byte[] hash32, byte[] in_seckey );
+
+  // verify recoverable signature is correct for hash of message
+  public native boolean
+  verifySchnorr( byte[] signature, byte[] hash32, byte[] in_pubkey );
+
+  // recover public key from sig and hash of message
+  public native byte[] recoverSchnorr( byte[] hash32, byte[] sig );
+
   // test --------------------------------------------------------------------
   public static void main( String[] args ) throws Exception
   {
@@ -106,13 +116,25 @@ public class Secp256k1
     sig = crypto.signECDSARecoverable( hash32, seckey );
 
     if ( !crypto.verifyECDSARecoverable(sig, hash32, pubkey) )
-      throw new Exception( "Secp256k1.main(): verify FAIL" );
+      throw new Exception( "Secp256k1.main(): recovery verify FAIL" );
 
     byte[] recoveredpubkey = crypto.recoverPublicKey( hash32, sig );
     String recoveredpubkeyS = HexString.encode( recoveredpubkey );
 
     if (!pubkeyS.equalsIgnoreCase(recoveredpubkeyS))
-      throw new Exception( "Secp256k1.main(): recoverable sig verify FAIL" );
+      throw new Exception( "Secp256k1.main(): recovery recover FAIL" );
+
+    // test Schnorr sign/verify/recover
+    sig = crypto.signSchnorr( hash32, seckey );
+
+    if ( !crypto.verifySchnorr(sig, hash32, pubkey) )
+      throw new Exception( "Secp256k1.main(): verify FAIL" );
+
+    recoveredpubkey = crypto.recoverSchnorr( hash32, sig );
+    recoveredpubkeyS = HexString.encode( recoveredpubkey );
+
+    if (!pubkeyS.equalsIgnoreCase(recoveredpubkeyS))
+      throw new Exception( "Secp256k1.main(): schnorr recovery FAIL" );
 
     System.out.println( "Secp256k1: PASS" );
   }

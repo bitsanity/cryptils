@@ -6,6 +6,11 @@ Java Utilities for Crypto
 
 * github.com/bitcoin-core/secp256k1
 
+NOTE: the secp256k1 library does NOT include the recovery and schnorr modules
+by default. Include them in the install as follows:
+
+`./configure --enable-experimental --enable-module-recovery --enable-module-schnorr`
+
 ## Included Dependencies
 
 * scrypt-1.4.0

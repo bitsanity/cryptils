@@ -5,6 +5,7 @@
 
 #include "secp256k1.h"
 #include "secp256k1_recovery.h"
+#include "secp256k1_schnorr.h"
 #include "tbox_Secp256k1.h"
 
 // constants - sizes in bytes
@@ -184,13 +185,13 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyAdd
 
   jbyte* jkey = (*env)->GetByteArrayElements( env, in_pubkey, NULL );
   jsize len = (*env)->GetArrayLength( env, in_pubkey );
-  if ( NULL == jkey || (jsize)PUBKEYSZ != len ) return NULL;
+  if ( NULL == jkey ) return NULL;
   unsigned char * pubkeybytes = (unsigned char *)jkey;
 
   // convert pubkey from serialized to opaque form
 
   secp256k1_pubkey pubkey;
-  if ( 1 != secp256k1_ec_pubkey_parse(pCONTEXT, &pubkey, pubkeybytes, PUBKEYSZ) )
+  if ( 1 != secp256k1_ec_pubkey_parse(pCONTEXT, &pubkey, pubkeybytes, (size_t)len) )
     return NULL;
 
   jbyte* jtweak = (*env)->GetByteArrayElements( env, in_tweak, NULL );
@@ -233,13 +234,13 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyMult
   // java to C
   jbyte* jkey = (*env)->GetByteArrayElements( env, in_pubkey, NULL );
   jsize len = (*env)->GetArrayLength( env, in_pubkey );
-  if ( NULL == jkey || (jsize)PUBKEYSZ != len ) return NULL;
+  if ( NULL == jkey ) return NULL;
   unsigned char * pubkeybytes = (unsigned char *)jkey;
 
   // deserialize public key
 
   secp256k1_pubkey pubkey;
-  if ( 1 != secp256k1_ec_pubkey_parse(pCONTEXT, &pubkey, pubkeybytes, PUBKEYSZ) )
+  if ( 1 != secp256k1_ec_pubkey_parse(pCONTEXT, &pubkey, pubkeybytes, (size_t)len) )
     return NULL;
 
   jbyte* jtweak = (*env)->GetByteArrayElements( env, in_tweak, NULL );
@@ -527,4 +528,130 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_recoverPublicKey
   return result;
 }
 
+// ==========================================================================
+// byte[] signSchnorr( byte[] hash32, byte[] in_seckey );
+// ==========================================================================
 
+JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_signSchnorr
+  (JNIEnv * env, jobject obj, jbyteArray hash32, jbyteArray in_seckey )
+{
+  // java to C - hash32
+
+  jbyte* jh32 = (*env)->GetByteArrayElements( env, hash32, NULL );
+  jsize len = (*env)->GetArrayLength( env, hash32 );
+  if ( NULL == jh32 || 32 != len ) return NULL;
+  unsigned char * hashbytes = (unsigned char *)jh32;
+
+  // java to C - key
+
+  jbyte* jkey = (*env)->GetByteArrayElements( env, in_seckey, NULL );
+  len = (*env)->GetArrayLength( env, in_seckey );
+  if ( NULL == jkey || (jsize)PVTKEYSZ != len ) return NULL;
+  unsigned char * seckeybytes = (unsigned char *)jkey;
+
+  // compute signature
+
+  unsigned char sig64[64];
+
+  if (1 != secp256k1_schnorr_sign(
+             pCONTEXT, sig64, hashbytes, seckeybytes, NULL, NULL))
+    return NULL;
+
+  // C to java - result
+
+  jbyteArray result = (*env)->NewByteArray( env, sizeof(sig64) );
+  if (NULL != result)
+    (*env)->SetByteArrayRegion( env, result, 0, sizeof(sig64), sig64 );
+
+  return result;
+}
+
+// ==========================================================================
+// boolean
+// verifySchnorr( byte[] signature, byte[] hash32, byte[] in_pubkey );
+// ==========================================================================
+
+JNIEXPORT jboolean JNICALL Java_tbox_Secp256k1_verifySchnorr
+( JNIEnv * env,
+  jobject obj,
+  jbyteArray signature,
+  jbyteArray hash32,
+  jbyteArray in_pubkey )
+{
+  // java to C - serialized signature
+  jbyte* jsig = (*env)->GetByteArrayElements( env, signature, NULL );
+  if ( NULL == jsig ) return JNI_FALSE;
+  unsigned char * sigbytes = (unsigned char *)jsig;
+
+  // java to C - pubkey
+  jbyte* jkey = (*env)->GetByteArrayElements( env, in_pubkey, NULL );
+  jsize len = (*env)->GetArrayLength( env, in_pubkey );
+  if ( NULL == jkey ) return JNI_FALSE;
+  unsigned char * pubkeybytes = (unsigned char *)jkey;
+
+  // convert pubkey from serialized to opaque form
+  secp256k1_pubkey pubkey;
+  if (1 != secp256k1_ec_pubkey_parse(pCONTEXT, &pubkey, pubkeybytes, len))
+    return JNI_FALSE;
+
+  // java to C - hash32
+  jbyte* jh32 = (*env)->GetByteArrayElements( env, hash32, NULL );
+  len = (*env)->GetArrayLength( env, hash32 );
+  if ( NULL == jh32 || 32 != len ) return JNI_FALSE;
+  unsigned char * hashbytes = (unsigned char *)jh32;
+
+  // verify signature
+  int iresult = secp256k1_schnorr_verify( pCONTEXT,
+                                          sigbytes,
+                                          hashbytes,
+                                          &pubkey );
+
+  if (1 == iresult) return JNI_TRUE;
+  return JNI_FALSE;
+}
+
+// ==========================================================================
+// public native byte[] recoverSchnorr( byte[] hash32, byte[] sig64 );
+// ==========================================================================
+
+JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_recoverSchnorr
+  (JNIEnv * env,
+   jobject obj,
+   jbyteArray hash32,
+   jbyteArray sig)
+{
+  // java to C - hash32
+  jbyte* jh32 = (*env)->GetByteArrayElements( env, hash32, NULL );
+  jsize len = (*env)->GetArrayLength( env, hash32 );
+  if ( NULL == jh32 || 32 != len ) return NULL;
+  unsigned char * hashbytes = (unsigned char *)jh32;
+
+  // java to C - signature
+  jbyte* jsig = (*env)->GetByteArrayElements( env, sig, NULL );
+  len = (*env)->GetArrayLength( env, sig );
+  if ( NULL == jsig || 64 != len) return JNI_FALSE;
+  unsigned char * sigbytes = (unsigned char *)jsig;
+
+  secp256k1_pubkey pubkey;
+
+  if (1 != secp256k1_schnorr_recover(pCONTEXT, &pubkey, sigbytes, hashbytes))
+    return NULL;
+
+  unsigned char serialPubKey[ PUBKEYSZ ];
+
+  size_t outLen = (size_t)PUBKEYSZ;
+  int compressed = SECP256K1_EC_UNCOMPRESSED;
+
+  (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
+                                       (unsigned char *)serialPubKey,
+                                       &outLen,
+                                       &pubkey,
+                                       compressed );
+
+  jbyteArray result = (*env)->NewByteArray( env, PUBKEYSZ );
+
+  if (NULL != result)
+    (*env)->SetByteArrayRegion( env, result, 0, PUBKEYSZ, serialPubKey );
+
+  return result;
+}
