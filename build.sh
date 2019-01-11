@@ -20,7 +20,7 @@ then
 
   echo making dist ...
   pushd ./java
-  jar -cf ../lib/tbox.jar ./tbox/*.class
+  jar -cf ../lib/tbox.jar ./tbox/*.class ./tbox/keccak256/*.class
   popd
 fi
 
