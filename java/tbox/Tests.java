@@ -15,6 +15,7 @@ public class Tests
     Base58.main( noargs );
     Base58Check.main( noargs );
     Base64.main( noargs );
+    BIP38.main( noargs );
     AES256.main( noargs );
     Secp256k1.main( noargs );
     WIF.main( noargs );
