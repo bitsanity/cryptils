@@ -77,8 +77,10 @@ public class BIP38 {
 
     byte[] pvkeyenc = Arrays.copyOfRange(rawkey, 7, 39);
 
-    byte[] pvkeyxored = new AES256( derHalf1 ).decrypt( pvkeyenc );
-    return ByteOps.xor( pvkeyxored, derHalf1 );
+    byte[] pvkeyxored = new AES256ECB( derHalf1 ).decrypt( pvkeyenc );
+    byte[] result = ByteOps.xor( pvkeyxored, derHalf1 );
+//    System.out.println( "result: " + HexString.encode(result) );
+    return result;
   }
 
   public static void main( String[] args ) throws Exception
