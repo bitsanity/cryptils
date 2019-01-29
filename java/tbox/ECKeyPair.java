@@ -30,6 +30,12 @@ public class ECKeyPair
     return crypto.publicKeyCreate( pvt_ );
   }
 
+  public byte[] uncompressedPublicKey() throws Exception
+  {
+    Secp256k1 crypto = new Secp256k1();
+    return crypto.uncompressPublicKey( crypto.publicKeyCreate(pvt_) );
+  }
+
   public byte[] privatekey() throws Exception
   {
     return pvt_;

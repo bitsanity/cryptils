@@ -10,10 +10,13 @@
 
 // constants - sizes in bytes
 #define SEEDLEN 32
-#define PVTKEYSZ 32
-#define PUBKEYSZ 65
 #define TWKSIZE 32
+#define PVTKEYSZ 32
+#define PUBKEYSZ 33
+#define UNCOMPPUBKEYSZ 65
+#define SIGLEN 65
 
+int compressed = SECP256K1_EC_COMPRESSED;
 secp256k1_context* pCONTEXT = NULL;
 
 // -------------------
@@ -77,14 +80,9 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyCreate
   if ( 1 != secp256k1_ec_pubkey_create(pCONTEXT, &pubkey, seckeybytes) )
     return NULL;
 
-  // 
   // pubkey struct is opaque - call serialize function to get a byte array
-  // library returns a 65-byte array containing the uncompressed pub key
-  //
   unsigned char serialPubKey[ PUBKEYSZ ];
-
   size_t outLen = (size_t)PUBKEYSZ;
-  int compressed = SECP256K1_EC_UNCOMPRESSED;
 
   (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
                                        (unsigned char *)serialPubKey,
@@ -96,6 +94,40 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyCreate
 
   if (NULL != result)
     (*env)->SetByteArrayRegion( env, result, 0, PUBKEYSZ, serialPubKey );
+
+  return result;
+}
+
+// -----------------------------------------------
+// byte[] uncompressPublicKey( byte[] in_pubkey );
+// -----------------------------------------------
+JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_uncompressPublicKey
+  ( JNIEnv * env, jobject obj, jbyteArray in_pubkey )
+{
+  // convert pubkey from serialized to opaque form
+  jbyte* jkey = (*env)->GetByteArrayElements( env, in_pubkey, NULL );
+  jsize len = (*env)->GetArrayLength( env, in_pubkey );
+  if ( NULL == jkey ) return NULL;
+  unsigned char * pubkeybytes = (unsigned char *)jkey;
+
+  secp256k1_pubkey pubkey;
+  if ( 1 != secp256k1_ec_pubkey_parse(
+              pCONTEXT, &pubkey, pubkeybytes, (size_t)len) )
+    return NULL;
+
+  // serialize opaque result to uncompressed size
+  unsigned char serialPubKey[ UNCOMPPUBKEYSZ ];
+  size_t outLen = (size_t)UNCOMPPUBKEYSZ;
+
+  (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
+                                       (unsigned char *)serialPubKey,
+                                       &outLen,
+                                       &pubkey,
+                                       SECP256K1_EC_UNCOMPRESSED );
+  // convert result from C to java
+  jbyteArray result = (*env)->NewByteArray( env, UNCOMPPUBKEYSZ );
+  if (NULL != result)
+    (*env)->SetByteArrayRegion( env, result, 0, UNCOMPPUBKEYSZ, serialPubKey );
 
   return result;
 }
@@ -181,8 +213,6 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_privateKeyMult
 JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyAdd
   (JNIEnv * env, jobject obj, jbyteArray in_pubkey, jbyteArray in_tweak )
 {
-  // C to java - pubkey
-
   jbyte* jkey = (*env)->GetByteArrayElements( env, in_pubkey, NULL );
   jsize len = (*env)->GetArrayLength( env, in_pubkey );
   if ( NULL == jkey ) return NULL;
@@ -207,7 +237,6 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyAdd
 
   unsigned char serialPubKey[ PUBKEYSZ ];
   size_t outLen = (size_t)PUBKEYSZ;
-  int compressed = SECP256K1_EC_UNCOMPRESSED;
 
   (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
                                        (unsigned char *)serialPubKey,
@@ -256,7 +285,6 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_publicKeyMult
 
   unsigned char serialPubKey[ PUBKEYSZ ];
   size_t outLen = (size_t)PUBKEYSZ;
-  int compressed = SECP256K1_EC_UNCOMPRESSED;
 
   (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
                                        (unsigned char *)serialPubKey,
@@ -396,7 +424,7 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_signECDSARecoverable
 
   // serialize signature into "compact" format (64 bytes + recovery byte)
 
-  unsigned char output[65];
+  unsigned char output[UNCOMPPUBKEYSZ];
   int recid;
 
   if (1 != secp256k1_ecdsa_recoverable_signature_serialize_compact(
@@ -492,7 +520,7 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_recoverPublicKey
   // java to C - serialized signature
   jbyte* jsig = (*env)->GetByteArrayElements( env, sig, NULL );
   len = (*env)->GetArrayLength( env, sig );
-  if ( NULL == jsig || 65 != len) return JNI_FALSE;
+  if ( NULL == jsig || SIGLEN != len) return JNI_FALSE;
   unsigned char * sigbytes = (unsigned char *)jsig;
 
   // parse signature from serialized compact form to struct
@@ -512,7 +540,6 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_recoverPublicKey
   unsigned char serialPubKey[ PUBKEYSZ ];
 
   size_t outLen = (size_t)PUBKEYSZ;
-  int compressed = SECP256K1_EC_UNCOMPRESSED;
 
   (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
                                        (unsigned char *)serialPubKey,
@@ -640,7 +667,6 @@ JNIEXPORT jbyteArray JNICALL Java_tbox_Secp256k1_recoverSchnorr
   unsigned char serialPubKey[ PUBKEYSZ ];
 
   size_t outLen = (size_t)PUBKEYSZ;
-  int compressed = SECP256K1_EC_UNCOMPRESSED;
 
   (void)secp256k1_ec_pubkey_serialize( pCONTEXT,
                                        (unsigned char *)serialPubKey,

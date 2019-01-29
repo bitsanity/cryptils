@@ -38,6 +38,10 @@ public class Secp256k1
   // Q = d . G
   public native byte[] publicKeyCreate( byte[] in_seckey );
 
+  // to turn a public key into a bitcoin/ethereum/... address it must be
+  // in uncompressed format
+  public native byte[] uncompressPublicKey( byte[] in_pubkey );
+
   // d + N
   public native byte[] privateKeyAdd( byte[] in_seckey, byte[] in_tweak );
 
@@ -97,7 +101,9 @@ public class Secp256k1
       throw new Exception( "Secp256k1.main(): bad key" );
 
     // test public key creation
-    byte[] pubkey = crypto.publicKeyCreate( seckey );
+    byte[] pubkey =
+      crypto.uncompressPublicKey( crypto.publicKeyCreate(seckey) );
+
     String pubkeyS = HexString.encode( pubkey );
 
     if (!exppubS.equalsIgnoreCase(pubkeyS))
@@ -118,7 +124,9 @@ public class Secp256k1
     if ( !crypto.verifyECDSARecoverable(sig, hash32, pubkey) )
       throw new Exception( "Secp256k1.main(): recovery verify FAIL" );
 
-    byte[] recoveredpubkey = crypto.recoverPublicKey( hash32, sig );
+    byte[] recoveredpubkey =
+      crypto.uncompressPublicKey(crypto.recoverPublicKey(hash32, sig) );
+
     String recoveredpubkeyS = HexString.encode( recoveredpubkey );
 
     if (!pubkeyS.equalsIgnoreCase(recoveredpubkeyS))
@@ -130,7 +138,9 @@ public class Secp256k1
     if ( !crypto.verifySchnorr(sig, hash32, pubkey) )
       throw new Exception( "Secp256k1.main(): verify FAIL" );
 
-    recoveredpubkey = crypto.recoverSchnorr( hash32, sig );
+    recoveredpubkey =
+      crypto.uncompressPublicKey(crypto.recoverSchnorr(hash32, sig) );
+
     recoveredpubkeyS = HexString.encode( recoveredpubkey );
 
     if (!pubkeyS.equalsIgnoreCase(recoveredpubkeyS))

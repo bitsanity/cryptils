@@ -5,15 +5,12 @@ public class BitcoinAddress
 {
   public BitcoinAddress( byte[] pvkey ) throws Exception
   {
-    // WARNING:
-    // curve must be configured to use the uncompressed public key format
     Secp256k1 curve = new Secp256k1();
 
     if ( !curve.privateKeyIsValid(pvkey) )
       throw new Exception( "BitcoinAddress(): bad key" );
 
-    // library prepended the 0x04 byte so dont have to do it here
-    byte[] pubkey = curve.publicKeyCreate( pvkey );
+    byte[] pubkey = curve.uncompressPublicKey( curve.publicKeyCreate(pvkey) );
 
     if (pubkey.length != 65)
       throw new Exception( "BitcoinAddress(): public key invalid" );

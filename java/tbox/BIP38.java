@@ -74,13 +74,12 @@ public class BIP38 {
                       SCRYPT_LEN );
 
     byte[] derHalf1 = Arrays.copyOfRange( derKey, 0, 32 );
+    byte[] derHalf2 = Arrays.copyOfRange( derKey, 32, 64 );
 
     byte[] pvkeyenc = Arrays.copyOfRange(rawkey, 7, 39);
 
-    byte[] pvkeyxored = new AES256ECB( derHalf1 ).decrypt( pvkeyenc );
-    byte[] result = ByteOps.xor( pvkeyxored, derHalf1 );
-//    System.out.println( "result: " + HexString.encode(result) );
-    return result;
+    byte[] pvkeyxored = new AES256ECB( derHalf2 ).decrypt( pvkeyenc );
+    return ByteOps.xor( pvkeyxored, derHalf1 );
   }
 
   public static void main( String[] args ) throws Exception
@@ -110,6 +109,15 @@ public class BIP38 {
       "6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq") );
     decrypted = decrypt( black, pphrases[1] );
     assert( Arrays.equals(red1, decrypted) );
+
+    // extra test
+    byte[] tst = HexString.decode(
+      "0xbc6aa62f97922fcddb1d5843f4e55688fb2d32c735c6bff494731075a0b035c0" );
+
+    ECKeyPair eckp = new ECKeyPair( tst );
+    String blk = BIP38.encrypt( tst, "123456" );
+    byte[] red = BIP38.decrypt( blk, "123456" );
+    assert( Arrays.equals(eckp.privatekey(), red) );
 
     System.out.println( "BIP38: PASS" );
   }

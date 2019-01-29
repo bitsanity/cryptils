@@ -139,5 +139,7 @@ public class ECIES
 
     if ( !red.equals(message) )
       throw new Exception( "ECIES.main(): FAIL" );
+
+    System.out.println( "ECIES: PASS" );
   }
 }
